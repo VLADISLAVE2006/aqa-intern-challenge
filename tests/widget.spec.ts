@@ -4,8 +4,11 @@ import {WidgetPage} from "./widget.page";
 test.describe('Uchi.ru widget ', () => {
   let widgetPage: WidgetPage;
 
-  test.beforeEach(async ({page}) => {
+  test.beforeEach(async ({page, context}) => {
     widgetPage = new WidgetPage(page);
+
+    // uchi.ru randomly serves A/B variants of the main page; the redesign variant ("b") has no support widget
+    await context.addCookies([{name: 'ab_mainpage_redesign', value: 'a', domain: 'uchi.ru', path: '/'}]);
 
     // open uchi.ru main page
     await page.goto('/');
@@ -23,12 +26,10 @@ test.describe('Uchi.ru widget ', () => {
   test('has correct title', async ({ page }) => {
     await widgetPage.openWidget();
 
-    const articles = await widgetPage.getPopularArticles();
-
-    await articles[0].click();
+    await widgetPage.getPopularArticles().first().click();
 
     await widgetPage.clickWriteToUs();
 
-    expect(await widgetPage.getTitle()).toEqual('Связь с поддержкой');
+    await expect(widgetPage.getTitle()).toHaveText('Связь с поддержкой');
   });
 });
